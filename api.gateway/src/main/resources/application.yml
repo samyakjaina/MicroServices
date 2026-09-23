@@ -1,0 +1,43 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+  datasource:
+    url: jdbc:mysql://localhost:3306/sys?allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: Samyak@123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+  cloud:
+    gateway:
+      routes:
+        - id: order-root
+          uri: lb://ORDER
+          predicates:
+            - Path=/orders
+          filters:
+            - RewritePath=/orders, /api/orders
+        - id: order-service
+          uri: lb://ORDER
+          predicates:
+            - Path=/orders/**
+          filters:
+            - RewritePath=/orders/(?<segment>.*), /api/$\{segment}
+      default-filters:
+        - AddRequestHeader=X-Gateway, api-gateway
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+
+jwt:
+  secret: secret-key-for-api-gateway-microservice-1234567890
